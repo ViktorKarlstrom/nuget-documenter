@@ -1,1 +1,2 @@
 # nuget-documenter
+PowerShell script that documents all NuGet packages in a .NET solution to Excel and saves it to C:/. Result contains each NuGet for every project within the solution, the current installed version, the latest available version (stable or prerelease) fetched via NuGet API. It also checks if there is a major version difference between the installed version and the latest available version.
