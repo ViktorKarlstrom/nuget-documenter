@@ -34,9 +34,6 @@ function GenNugetDoc($BaseDirectory) {
     # Make the table head bold, set the font size and the column width
     $ExcelWorkSheet.Rows.Item(1).Font.Bold = $true
     $ExcelWorkSheet.Rows.Item(1).Font.size = 15
-    $ExcelWorkSheet.Columns.Item(1).ColumnWidth = 28
-    $ExcelWorkSheet.Columns.Item(2).ColumnWidth = 28
-    $ExcelWorkSheet.Columns.Item(3).ColumnWidth = 28
 
     $ExcelWorkSheet.Columns.Format
 
