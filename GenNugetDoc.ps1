@@ -34,9 +34,10 @@ function GenNugetDoc($BaseDirectory) {
     $ExcelWorkSheet.Columns.Item(2).NumberFormat = "@"
     $ExcelWorkSheet.Columns.Item(4).NumberFormat = "@"
 
-    # Make the table head bold, set the font size and the column width
+    # Make the table head bold, set the font size and turn on filtering
     $ExcelWorkSheet.Rows.Item(1).Font.Bold = $true
     $ExcelWorkSheet.Rows.Item(1).Font.size = 12
+    $ExcelWorkSheet.Rows.Item(1).AutoFilter() | Out-Null
 
     $ExcelWorkSheet.Columns.Format
 
