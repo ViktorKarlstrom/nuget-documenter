@@ -3,6 +3,7 @@ function GenNugetDoc($BaseDirectory) {
 
     $userInput = Read-Host -Prompt "Press Enter for latest stable, enter '9' for prerelease"
     $getPrerelease = "false"
+    
     if($userInput -eq '9'){
         $getPrerelease = "true"
     }
@@ -21,19 +22,21 @@ function GenNugetDoc($BaseDirectory) {
 
     # Fill in table head
     $ExcelWorkSheet.Cells.Item(1,1) = 'Package'
-    $ExcelWorkSheet.Cells.Item(1,2) = 'Current version'
-    $ExcelWorkSheet.Cells.Item(1,3) = 'Latest version'
-    $ExcelWorkSheet.Cells.Item(1,4) = 'Is major upgrade'
-    $ExcelWorkSheet.Cells.Item(1,5) = 'Has latest upgrade'
-    $ExcelWorkSheet.Cells.Item(1,6) = 'Project'
-    $ExcelWorkSheet.Cells.Item(1,7) = 'Location'
+    $ExcelWorkSheet.Cells.Item(1,2) = 'Original version'
+    $ExcelWorkSheet.Cells.Item(1,3) = 'Latest available version'
+    $ExcelWorkSheet.Cells.Item(1,4) = 'Solution version'
+    $ExcelWorkSheet.Cells.Item(1,5) = 'Is major upgrade'
+    $ExcelWorkSheet.Cells.Item(1,6) = 'Is updated to latest'
+    $ExcelWorkSheet.Cells.Item(1,7) = 'Status'
+    $ExcelWorkSheet.Cells.Item(1,8) = 'Project'
 
     # Format columns to text
     $ExcelWorkSheet.Columns.Item(2).NumberFormat = "@"
+    $ExcelWorkSheet.Columns.Item(4).NumberFormat = "@"
 
     # Make the table head bold, set the font size and the column width
     $ExcelWorkSheet.Rows.Item(1).Font.Bold = $true
-    $ExcelWorkSheet.Rows.Item(1).Font.size = 15
+    $ExcelWorkSheet.Rows.Item(1).Font.size = 12
 
     $ExcelWorkSheet.Columns.Format
 
@@ -45,6 +48,7 @@ function GenNugetDoc($BaseDirectory) {
 
     ForEach($PACKAGECONFIG in $PACKAGECONFIGS)
     {
+
         $path = $PACKAGECONFIG.FullName
         [xml]$packages = Get-Content $path
 
@@ -55,31 +59,20 @@ function GenNugetDoc($BaseDirectory) {
 
             $ExcelWorkSheet.Columns.Item(1).Rows.Item($counter) = $package.id
             $ExcelWorkSheet.Columns.Item(2).Rows.Item($counter) = $package.version
+            $ExcelWorkSheet.Columns.Item(4).Rows.Item($counter) = $package.version
             
             if($response.totalHits -gt 0) {
                 $ExcelWorkSheet.Columns.Item(3).Rows.Item($counter) = $response.data[0].version
+                $ExcelWorkSheet.Cells.Item($counter,5).FormulaLocal = "=(IF(VALUE(LEFT(C$counter;(FIND(`".`";C$counter;1)-1))) > VALUE(LEFT(B$counter;(FIND(`".`";B$counter;1)-1))); `"Yes`"; `"No`"))"
+                $ExcelWorkSheet.Cells.Item($counter,6).FormulaLocal = "=IF(G$counter=`"Uninstalled`";`"N/A`";IF(C$counter=D$counter; `"Yes`"; `"No`"))"
 
-                if($package.version.Split(".")[0] -lt $response.data[0].version.Split(".")[0]) {
-                    $ExcelWorkSheet.Columns.Item(4).Rows.Item($counter) = "Yes"
-                } else {
-                    $ExcelWorkSheet.Columns.Item(4).Rows.Item($counter) = "No"
-                }
-    
-                if ($package.version -eq $response.data[0].version) {
-                    $ExcelWorkSheet.Columns.Item(5).Rows.Item($counter) = "Yes"
-                } else {
-                    $ExcelWorkSheet.Columns.Item(5).Rows.Item($counter) = "No"
-                }
             } else {
                 $ExcelWorkSheet.Columns.Item(3).Rows.Item($counter) = "Not found"
-                $ExcelWorkSheet.Columns.Item(4).Rows.Item($counter) = "N/A"
-                $ExcelWorkSheet.Columns.Item(5).Rows.Item($counter) = "N/A"
             }
 
-            $ExcelWorkSheet.Columns.Item(6).Rows.Item($counter) = $project
-            $ExcelWorkSheet.Columns.Item(7).Rows.Item($counter) = $path
-            $counter++
+            $ExcelWorkSheet.Columns.Item(8).Rows.Item($counter) = $project
 
+            $counter++
         }
     }
 
@@ -88,12 +81,14 @@ function GenNugetDoc($BaseDirectory) {
     $usedRange.EntireColumn.AutoFit() | Out-Null
     
     # Save the report and close Excel:
-    $timestamp = [int](Get-Date -UFormat %s -Millisecond 0)
-    $savedir = "C:\NuGetPackages-$($timestamp).xlsx";
+    $timestamp = (Get-Date -UFormat "%Y-%m-%d_%H-%M-%S").tostring()
+    $fileName = "NuGet-$($timestamp).xlsx";
+    $location = "C:"
+    $savedir = "$($location)\$($fileName)";
     $ExcelWorkBook.SaveAs($savedir)
     # $ExcelWorkBook.close($true)
 
     Write-Host $($counter-2) "rows written"
-    Write-Host "Excel saved to $savedir"
+    Write-Host "$fileName saved at $location"
     Invoke-Item C:/
 }
